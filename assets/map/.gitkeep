@@ -1,0 +1,2 @@
+# scripts/build-map.mjs 산출물(country_paths.json)이 여기 생성된다.
+# 파일이 없으면 Flutter가 assets/map/ 디렉터리 선언에서 에러를 내므로 이 파일을 지우지 말 것.

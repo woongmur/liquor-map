@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "dataVersion": 1,
+  "categories": [
+    { "id": "wine", "name": "와인", "mapColor": "#8E1E3B", "icon": "ti-glass-full", "sortOrder": 1 },
+    { "id": "whisky", "name": "위스키", "mapColor": "#B8860B", "icon": "ti-glass", "sortOrder": 2 },
+    { "id": "sake", "name": "사케", "mapColor": "#F2C744", "icon": "ti-bottle", "sortOrder": 3 },
+    { "id": "makgeolli", "name": "막걸리", "mapColor": "#4A90D9", "icon": "ti-bowl", "sortOrder": 4 },
+    { "id": "tequila", "name": "데킬라", "mapColor": "#2E8B57", "icon": "ti-glass-cocktail", "sortOrder": 5 }
+  ],
+  "countries": [
+    { "id": "fr", "isoNumeric": 250, "name": "프랑스", "displayNote": "보르도·부르고뉴" },
+    { "id": "gb", "isoNumeric": 826, "name": "영국", "displayNote": "스코틀랜드" },
+    { "id": "jp", "isoNumeric": 392, "name": "일본", "displayNote": null },
+    { "id": "kr", "isoNumeric": 410, "name": "대한민국", "displayNote": null },
+    { "id": "mx", "isoNumeric": 484, "name": "멕시코", "displayNote": "할리스코" }
+  ],
+  "drinks": [
+    {
+      "id": "bordeaux-wine",
+      "categoryIds": ["wine"],
+      "countryIds": ["fr"],
+      "name": "보르도 와인",
+      "abv": "12~14도",
+      "history": "프랑스 남서부 보르도 지방은 로마 시대부터 포도를 재배해온 곳이에요. 중세에는 영국 왕실에 와인을 수출하며 유명해졌고, 지금도 전 세계에서 가장 권위 있는 와인 산지 중 하나로 꼽혀요.",
+      "taste": "카베르네 소비뇽과 메를로를 주로 섞어 만들어서 묵직하고 떫은맛이 특징이에요. 이 떫은맛을 탄닌이라고 부르는데, 오래 숙성할수록 부드러워져요.",
+      "aroma": "블랙베리, 자두 같은 짙은 과일향에 오크통 숙성으로 생기는 바닐라와 담배 향이 섞여 나요.",
+      "beginnerTip": "떫은맛이 부담스럽다면 5년 이상 숙성된 제품을 골라보세요. 훨씬 부드러워요.",
+      "imageUrl": null,
+      "retailers": [
+        { "name": "데일리샷", "deepLink": null, "storeUrl": null },
+        { "name": "GS25 나만의냉장고", "deepLink": null, "storeUrl": null },
+        { "name": "이마트몰", "deepLink": null, "storeUrl": null }
+      ],
+      "cocktailIds": ["sangria", "kir", "mulled-wine", "wine-spritz"],
+      "sortOrder": 1
+    },
+    {
+      "id": "single-malt-whisky",
+      "categoryIds": ["whisky"],
+      "countryIds": ["gb"],
+      "name": "싱글몰트 위스키",
+      "abv": "40~46도",
+      "history": "15세기경 수도원의 증류 기술이 민간에 퍼지며 시작됐어요. 스코틀랜드는 지역마다 물맛과 토양이 달라서, 스페이사이드나 아일라처럼 개성이 뚜렷한 산지가 여럿 형성됐어요.",
+      "taste": "보리 몰트 특유의 고소함에 오크통 숙성에서 오는 단맛, 은은한 스모키함이 어우러져요.",
+      "aroma": "산지에 따라 크게 달라요. 아일라 지역은 훈연 향이 강하고, 스페이사이드는 꿀과 사과 향이 두드러져요.",
+      "beginnerTip": "스트레이트가 부담스러우면 물을 몇 방울 섞어보세요. 도수가 낮아지면서 향이 오히려 더 열려요.",
+      "imageUrl": null,
+      "retailers": [
+        { "name": "데일리샷", "deepLink": null, "storeUrl": null },
+        { "name": "신세계엘앤비몰", "deepLink": null, "storeUrl": null }
+      ],
+      "cocktailIds": ["old-fashioned", "whisky-sour", "highball", "manhattan"],
+      "sortOrder": 1
+    },
+    {
+      "id": "junmai-daiginjo",
+      "categoryIds": ["sake"],
+      "countryIds": ["jp"],
+      "name": "준마이 다이긴조",
+      "abv": "15~16도",
+      "history": "사케는 나라시대(710년경)부터 신에게 바치는 제물로 쓰이며 발전했어요. 다이긴조는 쌀을 절반 이하로 깎아내고 남은 중심부만 써서 만드는 최고급 등급이에요.",
+      "taste": "깔끔하고 부드러우며 단맛이 은은하게 남아요. 도수는 와인보다 약간 높은 편이에요.",
+      "aroma": "멜론, 배 같은 과일향과 함께 살짝 꽃향기가 느껴지고 뒤끝이 깨끗해요.",
+      "beginnerTip": "10도 안팎으로 차게 마시면 향이 더 살아나요. 데워 마시는 방식은 저렴한 등급에 어울려요.",
+      "imageUrl": null,
+      "retailers": [
+        { "name": "데일리샷", "deepLink": null, "storeUrl": null },
+        { "name": "이마트몰", "deepLink": null, "storeUrl": null }
+      ],
+      "cocktailIds": ["sake-mojito", "yuzu-sake-sour", "saketini", "sake-highball"],
+      "sortOrder": 1
+    },
+    {
+      "id": "saeng-makgeolli",
+      "categoryIds": ["makgeolli"],
+      "countryIds": ["kr"],
+      "name": "생막걸리",
+      "abv": "6~8도",
+      "history": "삼국시대 문헌에도 등장할 만큼 역사가 긴 술이에요. 쌀과 누룩을 발효시켜 만들며, 한국 농경 문화와 함께 발전해온 서민의 술이에요.",
+      "taste": "새콤달콤하면서 톡 쏘는 탄산감이 있고, 도수가 낮은 편이라 부담이 적어요.",
+      "aroma": "누룩 특유의 구수한 곡물향과 은은한 요구르트 같은 산미가 느껴져요.",
+      "beginnerTip": "마시기 전에 병을 살살 흔들어 가라앉은 앙금을 섞어주면 더 진한 맛을 즐길 수 있어요.",
+      "imageUrl": null,
+      "retailers": [
+        { "name": "GS25 나만의냉장고", "deepLink": null, "storeUrl": null },
+        { "name": "우리술닷컴", "deepLink": null, "storeUrl": null }
+      ],
+      "cocktailIds": ["maksa", "strawberry-makgeolli", "makgeolli-mojito", "makgeolli-ginger"],
+      "sortOrder": 1
+    },
+    {
+      "id": "blanco-tequila",
+      "categoryIds": ["tequila"],
+      "countryIds": ["mx"],
+      "name": "블랑코 데킬라",
+      "abv": "38~40도",
+      "history": "아즈텍 원주민들이 마시던 발효주 '풀케'에서 유래했고, 스페인 정복 후 증류법이 더해지며 지금의 데킬라가 됐어요. 할리스코 지역 아가베로 만든 것만 데킬라라는 이름을 쓸 수 있어요.",
+      "taste": "숙성을 거치지 않아 아가베 본연의 맛이 강하고, 화하면서도 살짝 단맛이 돌아요.",
+      "aroma": "풀냄새 같은 식물성 향과 후추 같은 스파이시함이 특징이에요.",
+      "beginnerTip": "샷으로 원샷하기보다 라임과 소금을 곁들이면 초보자도 부담 없이 즐길 수 있어요.",
+      "imageUrl": null,
+      "retailers": [
+        { "name": "데일리샷", "deepLink": null, "storeUrl": null }
+      ],
+      "cocktailIds": ["margarita", "tequila-sunrise", "paloma", "tequila-slammer"],
+      "sortOrder": 1
+    }
+  ],
+  "cocktails": [
+    { "id": "sangria", "name": "상그리아", "hint": "과일과 레드와인의 상큼한 조합", "recipe": "레드와인 750ml에 오렌지·사과·레몬 조각을 넣고 설탕 2큰술과 브랜디 30ml를 더해 냉장고에서 2시간 숙성한 뒤 탄산수를 부어요.", "taste": "달콤한 과일향과 와인의 산미가 어우러지고 탄산 덕분에 청량하게 넘어가요.", "difficulty": "easy", "imageUrl": null, "recipeVerified": false },
+    { "id": "kir", "name": "키르", "hint": "블랙커런트 향의 프랑스 정통 칵테일", "recipe": "화이트와인 150ml에 크렘 드 카시스 15ml를 넣고 가볍게 저어요.", "taste": "와인의 산뜻함에 새콤달콤한 베리향이 은은하게 감돌아요.", "difficulty": "easy", "imageUrl": null, "recipeVerified": false },
+    { "id": "mulled-wine", "name": "뱅쇼", "hint": "따뜻하게 즐기는 향신료 와인", "recipe": "레드와인 500ml에 시나몬 스틱, 정향, 오렌지 슬라이스, 꿀 2큰술을 넣고 약불에서 10분간 데워요.", "taste": "따뜻한 향신료 향과 달콤함이 몸을 녹여주는 겨울 음료예요.", "difficulty": "medium", "imageUrl": null, "recipeVerified": false },
+    { "id": "wine-spritz", "name": "와인 스프리츠", "hint": "가볍게 즐기는 탄산 와인", "recipe": "화이트와인 100ml에 탄산수 100ml와 얼음을 더하고 라임 한 조각을 곁들여요.", "taste": "도수는 낮아지고 청량감은 살아나 부담 없이 마시기 좋아요.", "difficulty": "easy", "imageUrl": null, "recipeVerified": false },
+
+    { "id": "old-fashioned", "name": "올드 패션드", "hint": "위스키 칵테일의 클래식", "recipe": "위스키 45ml에 각설탕 1개와 앙고스투라 비터스 2대시를 넣고 살짝 으깬 뒤 얼음과 함께 저어요. 오렌지 필로 장식해요.", "taste": "위스키 본연의 풍미가 살아있으면서 은은한 단맛과 쌉싸름함이 균형을 이뤄요.", "difficulty": "medium", "imageUrl": null, "recipeVerified": false },
+    { "id": "whisky-sour", "name": "위스키 사워", "hint": "새콤달콤 상큼한 위스키", "recipe": "위스키 45ml, 레몬즙 20ml, 설탕시럽 15ml를 얼음과 함께 강하게 흔들어 따라요.", "taste": "신맛과 단맛이 위스키의 향을 부드럽게 감싸줘요.", "difficulty": "medium", "imageUrl": null, "recipeVerified": false },
+    { "id": "highball", "name": "하이볼", "hint": "탄산으로 가볍게", "recipe": "위스키 30ml에 탄산수 90ml와 얼음을 넣고 가볍게 저어요.", "taste": "청량하고 목넘김이 부드러워 식사와도 잘 어울려요.", "difficulty": "easy", "imageUrl": null, "recipeVerified": false },
+    { "id": "manhattan", "name": "맨해튼", "hint": "베르무트와 만난 깊은 맛", "recipe": "위스키 45ml에 스위트 베르무트 20ml와 비터스 1대시를 넣고 저어서 체리로 장식해요.", "taste": "묵직하고 깊은 풍미에 살짝 달콤쌉싸름한 여운이 남아요.", "difficulty": "medium", "imageUrl": null, "recipeVerified": false },
+
+    { "id": "sake-mojito", "name": "사케 모히토", "hint": "민트향 가득한 시원한 사케", "recipe": "사케 60ml에 라임즙 15ml, 민트잎, 설탕시럽 10ml를 넣고 으깬 뒤 탄산수와 얼음을 채워요.", "taste": "민트의 청량함과 사케의 은은한 단맛이 잘 어울려요.", "difficulty": "easy", "imageUrl": null, "recipeVerified": false },
+    { "id": "yuzu-sake-sour", "name": "유자 사케 사워", "hint": "새콤달콤 유자향", "recipe": "사케 60ml에 유자청 20ml와 탄산수 60ml를 섞어요.", "taste": "유자의 상큼함이 사케의 부드러움을 살려줘요.", "difficulty": "easy", "imageUrl": null, "recipeVerified": false },
+    { "id": "saketini", "name": "사케티니", "hint": "깔끔한 사케 마티니", "recipe": "사케 60ml와 진 15ml를 얼음과 함께 저어 잔에 따라요.", "taste": "드라이하고 깔끔해서 식전주로 잘 어울려요.", "difficulty": "medium", "imageUrl": null, "recipeVerified": false },
+    { "id": "sake-highball", "name": "사케 하이볼", "hint": "탄산으로 가볍게", "recipe": "사케 60ml에 탄산수 90ml와 얼음을 채워요.", "taste": "가볍고 청량해서 부담 없이 즐기기 좋아요.", "difficulty": "easy", "imageUrl": null, "recipeVerified": false },
+
+    { "id": "maksa", "name": "막사 (막걸리+사이다)", "hint": "한국인의 소울 믹스", "recipe": "막걸리와 사이다를 1:1 비율로 섞어요.", "taste": "막걸리의 새콤함에 사이다의 단맛과 탄산이 더해져 청량해져요.", "difficulty": "easy", "imageUrl": null, "recipeVerified": false },
+    { "id": "strawberry-makgeolli", "name": "딸기 막걸리", "hint": "달콤한 딸기향", "recipe": "막걸리 200ml에 딸기청 30ml를 섞어요.", "taste": "새콤달콤한 딸기향이 막걸리의 산미와 잘 어울려요.", "difficulty": "easy", "imageUrl": null, "recipeVerified": false },
+    { "id": "makgeolli-mojito", "name": "막걸리 모히또", "hint": "민트와 라임의 조화", "recipe": "막걸리 150ml에 라임즙 15ml와 민트잎을 넣고 가볍게 섞어요.", "taste": "상큼한 민트와 라임이 막걸리를 더 시원하게 만들어줘요.", "difficulty": "easy", "imageUrl": null, "recipeVerified": false },
+    { "id": "makgeolli-ginger", "name": "막걸리 진저에일", "hint": "알싸한 생강향", "recipe": "막걸리 150ml에 진저에일 100ml를 섞어요.", "taste": "생강의 알싸함이 막걸리의 구수함과 재미있게 어우러져요.", "difficulty": "easy", "imageUrl": null, "recipeVerified": false },
+
+    { "id": "margarita", "name": "마가리타", "hint": "데킬라 칵테일의 정석", "recipe": "데킬라 45ml, 트리플섹 20ml, 라임즙 20ml를 흔들어 소금 리밍한 잔에 따라요.", "taste": "새콤한 라임과 짭짤한 소금이 데킬라의 화한 맛을 잘 잡아줘요.", "difficulty": "medium", "imageUrl": null, "recipeVerified": false },
+    { "id": "tequila-sunrise", "name": "데킬라 선라이즈", "hint": "일출을 닮은 그라데이션 칵테일", "recipe": "데킬라 45ml에 오렌지주스를 채우고 그레나딘 시럽 10ml를 천천히 부어요.", "taste": "달콤한 오렌지향 뒤로 데킬라의 알싸함이 느껴져요.", "difficulty": "easy", "imageUrl": null, "recipeVerified": false },
+    { "id": "paloma", "name": "팔로마", "hint": "자몽 탄산의 상큼함", "recipe": "데킬라 45ml에 자몽 탄산음료 100ml와 라임즙을 더해요.", "taste": "쌉쌀한 자몽향과 탄산이 데킬라와 잘 어울려요.", "difficulty": "easy", "imageUrl": null, "recipeVerified": false },
+    { "id": "tequila-slammer", "name": "테킬라 슬래머", "hint": "스파클링과 함께 원샷", "recipe": "데킬라 30ml에 스프라이트 30ml를 섞고 잔을 덮어 살짝 친 뒤 거품이 날 때 원샷해요.", "taste": "톡 쏘는 탄산과 함께 데킬라 향이 확 퍼져요.", "difficulty": "easy", "imageUrl": null, "recipeVerified": false }
+  ]
+}

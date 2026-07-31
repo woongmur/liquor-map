@@ -1,0 +1,46 @@
+name: liquor_map
+description: "세계지도에서 카테고리를 골라 나라별 전통주를 탐험하는 앱."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # 원격 JSON(version.json / drinks.json) 다운로드
+  http: ^1.6.0
+  # 캐시된 데이터 버전 기록
+  shared_preferences: ^2.5.5
+  # 다운로드한 JSON 본문 저장 위치
+  path_provider: ^2.1.6
+  # 판매처 딥링크 / 스토어 폴백
+  url_launcher: ^6.3.2
+  # country_paths.json의 SVG path 문자열 → Path 객체
+  path_drawing: ^1.0.1
+
+  # 광고는 아직 붙이지 않았다. google_mobile_ads를 추가하는 순간
+  # AndroidManifest에 com.google.android.gms.ads.APPLICATION_ID 메타데이터가
+  # 없으면 앱이 실행 즉시 죽는다. AdMob 작업을 시작할 때 함께 넣는다.
+  # google_mobile_ads: ^6.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    # 앱 내장 폴백. 첫 실행과 오프라인에서 이걸로 동작한다 (CLAUDE.md 참고).
+    - assets/data/drinks.json
+    # scripts/build-map.mjs 산출물. 디렉터리로 선언해뒀으므로
+    # country_paths.json이 생기면 pubspec 수정 없이 자동으로 포함된다.
+    - assets/map/
