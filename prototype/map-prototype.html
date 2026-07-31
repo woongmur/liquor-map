@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>세계 술 지도 — 프로토타입</title>
+<!--
+  플로우 확인용 프로토타입. 프로덕션 코드가 아니다.
+
+  - 데이터는 아래 DATA 상수에 인라인돼 있다. 더블클릭으로 바로 열리게 하려는 것이며,
+    실제 원본은 ../data/drinks.sample.json 이다. 구현 시에는 fetch + 캐시 구조로 바꾼다.
+  - 지도 토폴로지를 CDN에서 받아온다. 프로덕션에서는 반드시 앱에 내장할 것.
+  - 이 파일이 보여주려는 것은 두 가지다:
+      1) ID 참조 스키마에서 화면을 그리는 해석 로직 (resolveCountriesForCategory 등)
+      2) 지도 → 술 상세 → 칵테일 상세로 이어지는 화면 전환 흐름
+-->
+<style>
+  :root {
+    --bg: #ffffff; --surface: #f7f6f3; --border: #e3e1dc;
+    --text: #1a1a19; --text-sub: #6b6a65; --text-mute: #98968f;
+    --warn-bg: #fdf3dc; --warn-text: #8a5a00; --warn-border: #e8c987;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+    max-width: 720px; margin-inline: auto; line-height: 1.6;
+  }
+  h1 { font-size: 18px; font-weight: 500; margin: 0 0 16px; }
+  button {
+    font: inherit; background: transparent; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 7px 14px; cursor: pointer; color: var(--text);
+  }
+  button:hover { background: var(--surface); }
+  button.active { background: #e8eef7; border-color: #9bb8dd; color: #17436f; }
+  .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; }
+  .card { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; }
+  .label { font-size: 13px; font-weight: 500; color: var(--text-sub); margin: 0 0 4px; }
+  .body { font-size: 14px; margin: 0 0 14px; }
+  .row {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px;
+  }
+  .row.clickable { cursor: pointer; }
+  .row.clickable:hover { background: var(--surface); }
+  .row.best { background: var(--warn-bg); border-color: var(--warn-border); }
+  .hint { font-size: 12px; color: var(--text-sub); margin: 2px 0 0; }
+  .muted { font-size: 12px; color: var(--text-mute); }
+  .badge {
+    display: inline-block; background: var(--warn-bg); color: var(--warn-text);
+    border: 1px solid var(--warn-border); font-size: 12px; padding: 3px 10px; border-radius: var(--radius);
+  }
+  .swatch { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; }
+  .back { margin-bottom: 12px; }
+  .hidden { display: none; }
+  path.country { fill: var(--surface); stroke: var(--border); stroke-width: 0.5; }
+  path.country.active { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<h1>세계 술 지도 — 프로토타입</h1>
+
+<section id="screen-map">
+  <div class="tabs" id="tabs"></div>
+  <p class="muted" id="map-status">지도를 불러오는 중</p>
+  <div id="map"></div>
+  <p class="muted" style="text-align:center">색칠된 국가를 눌러보세요</p>
+</section>
+
+<section id="screen-picker" class="hidden">
+  <button class="back" onclick="go('map')">← 지도로</button>
+  <p class="label" id="picker-title"></p>
+  <div id="picker-list"></div>
+</section>
+
+<section id="screen-drink" class="hidden">
+  <button class="back" onclick="backFromDrink()">← 뒤로</button>
+  <div class="card">
+    <div class="swatch" id="drink-swatch" style="width:56px;height:56px;margin:0 auto 12px"></div>
+    <p class="muted" id="drink-meta" style="text-align:center;margin:0 0 2px"></p>
+    <p style="font-size:18px;font-weight:500;text-align:center;margin:0 0 16px" id="drink-name"></p>
+    <p class="label">역사</p><p class="body" id="drink-history"></p>
+    <p class="label">맛</p><p class="body" id="drink-taste"></p>
+    <p class="label">향</p><p class="body" id="drink-aroma"></p>
+    <p class="label">초보자 팁</p><p class="body" id="drink-tip" style="margin-bottom:0"></p>
+  </div>
+  <p class="label" style="margin-top:20px">구매할 수 있는 앱</p>
+  <div id="drink-retailers"></div>
+  <p class="label" style="margin-top:20px">이 술로 만드는 칵테일</p>
+  <div id="drink-cocktails"></div>
+</section>
+
+<section id="screen-cocktail" class="hidden">
+  <button class="back" onclick="go('drink')">← 칵테일 목록으로</button>
+  <div class="card">
+    <div class="swatch" id="cocktail-swatch" style="width:56px;height:56px;margin:0 auto 12px"></div>
+    <p style="text-align:center;margin:0 0 8px" id="cocktail-badge-wrap"></p>
+    <p style="font-size:18px;font-weight:500;text-align:center;margin:0 0 16px" id="cocktail-name"></p>
+    <p class="label">레시피</p><p class="body" id="cocktail-recipe"></p>
+    <p class="label">맛</p><p class="body" id="cocktail-taste" style="margin-bottom:0"></p>
+  </div>
+  <p class="muted" id="cocktail-unverified" style="margin-top:12px"></p>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+const DATA = {
+  schemaVersion: 1,
+  dataVersion: 1,
+  categories: [
+    { id:"wine", name:"와인", mapColor:"#8E1E3B", sortOrder:1 },
+    { id:"whisky", name:"위스키", mapColor:"#B8860B", sortOrder:2 },
+    { id:"sake", name:"사케", mapColor:"#D9A800", sortOrder:3 },
+    { id:"makgeolli", name:"막걸리", mapColor:"#4A90D9", sortOrder:4 },
+    { id:"tequila", name:"데킬라", mapColor:"#2E8B57", sortOrder:5 }
+  ],
+  countries: [
+    { id:"fr", isoNumeric:250, name:"프랑스", displayNote:"보르도·부르고뉴" },
+    { id:"gb", isoNumeric:826, name:"영국", displayNote:"스코틀랜드" },
+    { id:"jp", isoNumeric:392, name:"일본", displayNote:null },
+    { id:"kr", isoNumeric:410, name:"대한민국", displayNote:null },
+    { id:"mx", isoNumeric:484, name:"멕시코", displayNote:"할리스코" }
+  ],
+  drinks: [
+    { id:"bordeaux-wine", categoryIds:["wine"], countryIds:["fr"], name:"보르도 와인", abv:"12~14도",
+      history:"프랑스 남서부 보르도 지방은 로마 시대부터 포도를 재배해온 곳이에요. 중세에는 영국 왕실에 와인을 수출하며 유명해졌고, 지금도 전 세계에서 가장 권위 있는 와인 산지 중 하나로 꼽혀요.",
+      taste:"카베르네 소비뇽과 메를로를 주로 섞어 만들어서 묵직하고 떫은맛이 특징이에요. 이 떫은맛을 탄닌이라고 부르는데, 오래 숙성할수록 부드러워져요.",
+      aroma:"블랙베리, 자두 같은 짙은 과일향에 오크통 숙성으로 생기는 바닐라와 담배 향이 섞여 나요.",
+      beginnerTip:"떫은맛이 부담스럽다면 5년 이상 숙성된 제품을 골라보세요. 훨씬 부드러워요.",
+      retailers:[{name:"데일리샷"},{name:"GS25 나만의냉장고"},{name:"이마트몰"}],
+      cocktailIds:["sangria","kir","mulled-wine","wine-spritz"] },
+    { id:"single-malt-whisky", categoryIds:["whisky"], countryIds:["gb"], name:"싱글몰트 위스키", abv:"40~46도",
+      history:"15세기경 수도원의 증류 기술이 민간에 퍼지며 시작됐어요. 스코틀랜드는 지역마다 물맛과 토양이 달라서, 스페이사이드나 아일라처럼 개성이 뚜렷한 산지가 여럿 형성됐어요.",
+      taste:"보리 몰트 특유의 고소함에 오크통 숙성에서 오는 단맛, 은은한 스모키함이 어우러져요.",
+      aroma:"산지에 따라 크게 달라요. 아일라 지역은 훈연 향이 강하고, 스페이사이드는 꿀과 사과 향이 두드러져요.",
+      beginnerTip:"스트레이트가 부담스러우면 물을 몇 방울 섞어보세요. 도수가 낮아지면서 향이 오히려 더 열려요.",
+      retailers:[{name:"데일리샷"},{name:"신세계엘앤비몰"}],
+      cocktailIds:["old-fashioned","whisky-sour","highball","manhattan"] },
+    { id:"junmai-daiginjo", categoryIds:["sake"], countryIds:["jp"], name:"준마이 다이긴조", abv:"15~16도",
+      history:"사케는 나라시대(710년경)부터 신에게 바치는 제물로 쓰이며 발전했어요. 다이긴조는 쌀을 절반 이하로 깎아내고 남은 중심부만 써서 만드는 최고급 등급이에요.",
+      taste:"깔끔하고 부드러우며 단맛이 은은하게 남아요. 도수는 와인보다 약간 높은 편이에요.",
+      aroma:"멜론, 배 같은 과일향과 함께 살짝 꽃향기가 느껴지고 뒤끝이 깨끗해요.",
+      beginnerTip:"10도 안팎으로 차게 마시면 향이 더 살아나요. 데워 마시는 방식은 저렴한 등급에 어울려요.",
+      retailers:[{name:"데일리샷"},{name:"이마트몰"}],
+      cocktailIds:["sake-mojito","yuzu-sake-sour","saketini","sake-highball"] },
+    { id:"saeng-makgeolli", categoryIds:["makgeolli"], countryIds:["kr"], name:"생막걸리", abv:"6~8도",
+      history:"삼국시대 문헌에도 등장할 만큼 역사가 긴 술이에요. 쌀과 누룩을 발효시켜 만들며, 한국 농경 문화와 함께 발전해온 서민의 술이에요.",
+      taste:"새콤달콤하면서 톡 쏘는 탄산감이 있고, 도수가 낮은 편이라 부담이 적어요.",
+      aroma:"누룩 특유의 구수한 곡물향과 은은한 요구르트 같은 산미가 느껴져요.",
+      beginnerTip:"마시기 전에 병을 살살 흔들어 가라앉은 앙금을 섞어주면 더 진한 맛을 즐길 수 있어요.",
+      retailers:[{name:"GS25 나만의냉장고"},{name:"우리술닷컴"}],
+      cocktailIds:["maksa","strawberry-makgeolli","makgeolli-mojito","makgeolli-ginger"] },
+    { id:"blanco-tequila", categoryIds:["tequila"], countryIds:["mx"], name:"블랑코 데킬라", abv:"38~40도",
+      history:"아즈텍 원주민들이 마시던 발효주 '풀케'에서 유래했고, 스페인 정복 후 증류법이 더해지며 지금의 데킬라가 됐어요. 할리스코 지역 아가베로 만든 것만 데킬라라는 이름을 쓸 수 있어요.",
+      taste:"숙성을 거치지 않아 아가베 본연의 맛이 강하고, 화하면서도 살짝 단맛이 돌아요.",
+      aroma:"풀냄새 같은 식물성 향과 후추 같은 스파이시함이 특징이에요.",
+      beginnerTip:"샷으로 원샷하기보다 라임과 소금을 곁들이면 초보자도 부담 없이 즐길 수 있어요.",
+      retailers:[{name:"데일리샷"}],
+      cocktailIds:["margarita","tequila-sunrise","paloma","tequila-slammer"] }
+  ],
+  cocktails: [
+    { id:"sangria", name:"상그리아", hint:"과일과 레드와인의 상큼한 조합", recipe:"레드와인 750ml에 오렌지·사과·레몬 조각을 넣고 설탕 2큰술과 브랜디 30ml를 더해 냉장고에서 2시간 숙성한 뒤 탄산수를 부어요.", taste:"달콤한 과일향과 와인의 산미가 어우러지고 탄산 덕분에 청량하게 넘어가요.", recipeVerified:false },
+    { id:"kir", name:"키르", hint:"블랙커런트 향의 프랑스 정통 칵테일", recipe:"화이트와인 150ml에 크렘 드 카시스 15ml를 넣고 가볍게 저어요.", taste:"와인의 산뜻함에 새콤달콤한 베리향이 은은하게 감돌아요.", recipeVerified:false },
+    { id:"mulled-wine", name:"뱅쇼", hint:"따뜻하게 즐기는 향신료 와인", recipe:"레드와인 500ml에 시나몬 스틱, 정향, 오렌지 슬라이스, 꿀 2큰술을 넣고 약불에서 10분간 데워요.", taste:"따뜻한 향신료 향과 달콤함이 몸을 녹여주는 겨울 음료예요.", recipeVerified:false },
+    { id:"wine-spritz", name:"와인 스프리츠", hint:"가볍게 즐기는 탄산 와인", recipe:"화이트와인 100ml에 탄산수 100ml와 얼음을 더하고 라임 한 조각을 곁들여요.", taste:"도수는 낮아지고 청량감은 살아나 부담 없이 마시기 좋아요.", recipeVerified:false },
+    { id:"old-fashioned", name:"올드 패션드", hint:"위스키 칵테일의 클래식", recipe:"위스키 45ml에 각설탕 1개와 앙고스투라 비터스 2대시를 넣고 살짝 으깬 뒤 얼음과 함께 저어요. 오렌지 필로 장식해요.", taste:"위스키 본연의 풍미가 살아있으면서 은은한 단맛과 쌉싸름함이 균형을 이뤄요.", recipeVerified:false },
+    { id:"whisky-sour", name:"위스키 사워", hint:"새콤달콤 상큼한 위스키", recipe:"위스키 45ml, 레몬즙 20ml, 설탕시럽 15ml를 얼음과 함께 강하게 흔들어 따라요.", taste:"신맛과 단맛이 위스키의 향을 부드럽게 감싸줘요.", recipeVerified:false },
+    { id:"highball", name:"하이볼", hint:"탄산으로 가볍게", recipe:"위스키 30ml에 탄산수 90ml와 얼음을 넣고 가볍게 저어요.", taste:"청량하고 목넘김이 부드러워 식사와도 잘 어울려요.", recipeVerified:false },
+    { id:"manhattan", name:"맨해튼", hint:"베르무트와 만난 깊은 맛", recipe:"위스키 45ml에 스위트 베르무트 20ml와 비터스 1대시를 넣고 저어서 체리로 장식해요.", taste:"묵직하고 깊은 풍미에 살짝 달콤쌉싸름한 여운이 남아요.", recipeVerified:false },
+    { id:"sake-mojito", name:"사케 모히토", hint:"민트향 가득한 시원한 사케", recipe:"사케 60ml에 라임즙 15ml, 민트잎, 설탕시럽 10ml를 넣고 으깬 뒤 탄산수와 얼음을 채워요.", taste:"민트의 청량함과 사케의 은은한 단맛이 잘 어울려요.", recipeVerified:false },
+    { id:"yuzu-sake-sour", name:"유자 사케 사워", hint:"새콤달콤 유자향", recipe:"사케 60ml에 유자청 20ml와 탄산수 60ml를 섞어요.", taste:"유자의 상큼함이 사케의 부드러움을 살려줘요.", recipeVerified:false },
+    { id:"saketini", name:"사케티니", hint:"깔끔한 사케 마티니", recipe:"사케 60ml와 진 15ml를 얼음과 함께 저어 잔에 따라요.", taste:"드라이하고 깔끔해서 식전주로 잘 어울려요.", recipeVerified:false },
+    { id:"sake-highball", name:"사케 하이볼", hint:"탄산으로 가볍게", recipe:"사케 60ml에 탄산수 90ml와 얼음을 채워요.", taste:"가볍고 청량해서 부담 없이 즐기기 좋아요.", recipeVerified:false },
+    { id:"maksa", name:"막사 (막걸리+사이다)", hint:"한국인의 소울 믹스", recipe:"막걸리와 사이다를 1:1 비율로 섞어요.", taste:"막걸리의 새콤함에 사이다의 단맛과 탄산이 더해져 청량해져요.", recipeVerified:false },
+    { id:"strawberry-makgeolli", name:"딸기 막걸리", hint:"달콤한 딸기향", recipe:"막걸리 200ml에 딸기청 30ml를 섞어요.", taste:"새콤달콤한 딸기향이 막걸리의 산미와 잘 어울려요.", recipeVerified:false },
+    { id:"makgeolli-mojito", name:"막걸리 모히또", hint:"민트와 라임의 조화", recipe:"막걸리 150ml에 라임즙 15ml와 민트잎을 넣고 가볍게 섞어요.", taste:"상큼한 민트와 라임이 막걸리를 더 시원하게 만들어줘요.", recipeVerified:false },
+    { id:"makgeolli-ginger", name:"막걸리 진저에일", hint:"알싸한 생강향", recipe:"막걸리 150ml에 진저에일 100ml를 섞어요.", taste:"생강의 알싸함이 막걸리의 구수함과 재미있게 어우러져요.", recipeVerified:false },
+    { id:"margarita", name:"마가리타", hint:"데킬라 칵테일의 정석", recipe:"데킬라 45ml, 트리플섹 20ml, 라임즙 20ml를 흔들어 소금 리밍한 잔에 따라요.", taste:"새콤한 라임과 짭짤한 소금이 데킬라의 화한 맛을 잘 잡아줘요.", recipeVerified:false },
+    { id:"tequila-sunrise", name:"데킬라 선라이즈", hint:"일출을 닮은 그라데이션 칵테일", recipe:"데킬라 45ml에 오렌지주스를 채우고 그레나딘 시럽 10ml를 천천히 부어요.", taste:"달콤한 오렌지향 뒤로 데킬라의 알싸함이 느껴져요.", recipeVerified:false },
+    { id:"paloma", name:"팔로마", hint:"자몽 탄산의 상큼함", recipe:"데킬라 45ml에 자몽 탄산음료 100ml와 라임즙을 더해요.", taste:"쌉쌀한 자몽향과 탄산이 데킬라와 잘 어울려요.", recipeVerified:false },
+    { id:"tequila-slammer", name:"테킬라 슬래머", hint:"스파클링과 함께 원샷", recipe:"데킬라 30ml에 스프라이트 30ml를 섞고 잔을 덮어 살짝 친 뒤 거품이 날 때 원샷해요.", taste:"톡 쏘는 탄산과 함께 데킬라 향이 확 퍼져요.", recipeVerified:false }
+  ]
+};
+
+const byId = (arr) => Object.fromEntries(arr.map(x => [x.id, x]));
+const CAT = byId(DATA.categories);
+const COUNTRY = byId(DATA.countries);
+const DRINK = byId(DATA.drinks);
+const COCKTAIL = byId(DATA.cocktails);
+
+let selectedCategory = null;
+let currentDrink = null;
+let cameFrom = 'map';
+
+// 스키마 해석 로직 — 구현 시 이 부분을 참고할 것
+
+function drinksForCategory(catId) {
+  if (!catId) return DATA.drinks;
+  return DATA.drinks.filter(d => d.categoryIds.includes(catId));
+}
+
+function countryColorMap(catId) {
+  // 국가 isoNumeric -> 칠할 색. 한 국가에 여러 술이 걸리면 첫 카테고리 색을 쓴다.
+  const map = {};
+  drinksForCategory(catId).forEach(d => {
+    const color = CAT[d.categoryIds[0]].mapColor;
+    d.countryIds.forEach(cid => {
+      const c = COUNTRY[cid];
+      if (c && !(c.isoNumeric in map)) map[c.isoNumeric] = color;
+    });
+  });
+  return map;
+}
+
+function drinksInCountry(countryId, catId) {
+  return drinksForCategory(catId).filter(d => d.countryIds.includes(countryId));
+}
+
+// 화면 전환
+
+function go(screen) {
+  ['map','picker','drink','cocktail'].forEach(s =>
+    document.getElementById('screen-' + s).classList.toggle('hidden', s !== screen));
+  window.scrollTo(0, 0);
+}
+
+function backFromDrink() { go(cameFrom); }
+
+// 렌더링
+
+function renderTabs() {
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+  const all = document.createElement('button');
+  all.textContent = '전체';
+  all.onclick = () => selectCategory(null);
+  all.dataset.cat = '';
+  tabs.appendChild(all);
+  [...DATA.categories].sort((a,b) => (a.sortOrder||0)-(b.sortOrder||0)).forEach(c => {
+    const b = document.createElement('button');
+    b.textContent = c.name;
+    b.dataset.cat = c.id;
+    b.onclick = () => selectCategory(c.id);
+    tabs.appendChild(b);
+  });
+}
+
+function selectCategory(catId) {
+  selectedCategory = catId;
+  document.querySelectorAll('#tabs button').forEach(b =>
+    b.classList.toggle('active', b.dataset.cat === (catId || '')));
+  paintMap();
+}
+
+function paintMap() {
+  const colors = countryColorMap(selectedCategory);
+  document.querySelectorAll('path.country').forEach(p => {
+    const iso = Number(p.dataset.iso);
+    const color = colors[iso];
+    p.style.fill = color || '';
+    p.classList.toggle('active', Boolean(color));
+  });
+}
+
+function onCountryClick(isoNumeric) {
+  const country = DATA.countries.find(c => c.isoNumeric === isoNumeric);
+  if (!country) return;
+  const list = drinksInCountry(country.id, selectedCategory);
+  if (list.length === 0) return;
+  if (list.length === 1) { cameFrom = 'map'; showDrink(list[0].id); return; }
+
+  // 한 국가에 술이 여러 개면 선택 목록을 먼저 보여준다
+  cameFrom = 'picker';
+  document.getElementById('picker-title').textContent = country.name + '의 술';
+  const wrap = document.getElementById('picker-list');
+  wrap.innerHTML = '';
+  list.forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'row clickable';
+    row.onclick = () => showDrink(d.id);
+    row.innerHTML = `<div class="swatch" style="background:${CAT[d.categoryIds[0]].mapColor}"></div>
+      <div style="flex:1"><div style="font-weight:500;font-size:14px">${d.name}</div>
+      <p class="hint">${CAT[d.categoryIds[0]].name} · ${d.abv || ''}</p></div><span class="muted">›</span>`;
+    wrap.appendChild(row);
+  });
+  go('picker');
+}
+
+function showDrink(drinkId) {
+  const d = DRINK[drinkId];
+  currentDrink = d;
+  const color = CAT[d.categoryIds[0]].mapColor;
+  const countryNames = d.countryIds.map(c => COUNTRY[c].name).join(', ');
+
+  document.getElementById('drink-swatch').style.background = color;
+  document.getElementById('drink-meta').textContent =
+    `${countryNames} · ${d.categoryIds.map(c => CAT[c].name).join(', ')}${d.abv ? ' · ' + d.abv : ''}`;
+  document.getElementById('drink-name').textContent = d.name;
+  document.getElementById('drink-history').textContent = d.history;
+  document.getElementById('drink-taste').textContent = d.taste;
+  document.getElementById('drink-aroma').textContent = d.aroma;
+  document.getElementById('drink-tip').textContent = d.beginnerTip;
+
+  const rWrap = document.getElementById('drink-retailers');
+  rWrap.innerHTML = '';
+  (d.retailers || []).forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `<span style="font-size:14px">${r.name}</span>`;
+    rWrap.appendChild(row);
+  });
+
+  const cWrap = document.getElementById('drink-cocktails');
+  cWrap.innerHTML = '';
+  (d.cocktailIds || []).forEach((cid, i) => {
+    const c = COCKTAIL[cid];
+    if (!c) return;
+    const isBest = i === 0;  // 배열 첫 항목이 추천
+    const row = document.createElement('div');
+    row.className = 'row clickable' + (isBest ? ' best' : '');
+    row.onclick = () => showCocktail(cid);
+    row.innerHTML = `<div class="swatch" style="background:${isBest ? '#E8B33C' : color}"></div>
+      <div style="flex:1"><div style="font-weight:500;font-size:14px">${c.name}${isBest ? ' ★' : ''}</div>
+      <p class="hint">${c.hint}</p></div><span class="muted">›</span>`;
+    cWrap.appendChild(row);
+  });
+
+  go('drink');
+}
+
+function showCocktail(cocktailId) {
+  const c = COCKTAIL[cocktailId];
+  const isBest = currentDrink.cocktailIds[0] === cocktailId;
+  document.getElementById('cocktail-swatch').style.background =
+    isBest ? '#E8B33C' : CAT[currentDrink.categoryIds[0]].mapColor;
+  document.getElementById('cocktail-badge-wrap').innerHTML =
+    isBest ? '<span class="badge">★ 베스트 추천</span>' : '';
+  document.getElementById('cocktail-name').textContent = c.name;
+  document.getElementById('cocktail-recipe').textContent = c.recipe;
+  document.getElementById('cocktail-taste').textContent = c.taste;
+  document.getElementById('cocktail-unverified').textContent =
+    c.recipeVerified ? '' : '이 레시피는 아직 검증 전이에요.';
+  go('cocktail');
+}
+
+// 지도 — 프로덕션에서는 토폴로지를 앱에 내장할 것
+
+renderTabs();
+selectCategory(null);
+
+const svg = d3.select('#map').append('svg')
+  .attr('viewBox', '0 0 640 340').style('width', '100%').style('height', 'auto');
+
+d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world => {
+  const features = topojson.feature(world, world.objects.countries).features;
+  const projection = d3.geoNaturalEarth1()
+    .fitSize([640, 340], { type: 'FeatureCollection', features });
+  const path = d3.geoPath(projection);
+
+  svg.selectAll('path').data(features).enter().append('path')
+    .attr('d', path)
+    .attr('class', 'country')
+    .attr('data-iso', d => d.id)
+    .on('click', (_, d) => onCountryClick(Number(d.id)));
+
+  document.getElementById('map-status').classList.add('hidden');
+  paintMap();
+}).catch(() => {
+  document.getElementById('map-status').textContent = '지도를 불러오지 못했어요.';
+});
+</script>
+</body>
+</html>
